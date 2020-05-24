@@ -1,16 +1,18 @@
-import copy
-import sys
 import abc
-import simpy
+import copy
 import functools
-import networkx as nx
-import random
-import time
 from enum import Enum
-import numpy
-import utility as util
-from scipy.stats import norm
+import random
+import sys
+import time
+
 import psutil
+import networkx as nx
+import numpy
+from scipy.stats import norm
+import simpy
+
+import utility as util
 
 
 #This is the network module. It keeps all network elements, such as, processing nodes, RRHs, network nodes
@@ -36,7 +38,7 @@ class Frame(object):
 
 #this class extends the basic frame to represent a basic eCPRI frame
 #the ideia is that it carries payload from several users equipments and can carry one or more QoS classes of service
-#users is a list of UEs being carried, 
+#users is a list of UEs being carried,
 #QoS are the classes of service carried on this fram and size is the bit rate of the frame
 class ecpriFrame(Frame):
 	def __init__(self, aId, payLoad, src, dst, users, QoS, size):
@@ -53,8 +55,8 @@ class UserEquipment(object):
 		self.aId = aId
 		self.servingRRH = servingRRH
 		#set the beginning position of each UE as the middle of its base station area
-		self.posY = self.servingRRH.y2/2 
-		self.posX = self.servingRRH.x2/2 
+		self.posY = self.servingRRH.y2/2
+		self.posX = self.servingRRH.x2/2
 		#self.frameProcTime = frameProcTime
 		self.localTransmissionTime = localTransmissionTime
 		self.applicationType = applicationType
@@ -84,15 +86,15 @@ class UserEquipment(object):
 		val = random.randint(1, 4)
 		if val == 1:
 			self.posX += 1
-			self.posY = self.posY 
+			self.posY = self.posY
 		if val == 2:
 			self.posX -= 1
-			self.posY = self.posY 
+			self.posY = self.posY
 		elif val == 3:
-			self.posX = self.posX 
+			self.posX = self.posX
 			self.posY += 1
 		else:
-			self.posX = self.posX 
+			self.posX = self.posX
 			self.posY -= 1
 
 #this class represents a generic RRH
@@ -283,7 +285,7 @@ class ProcessingNode(ActiveNode):
 			self.currentLoad -= 1
 			self.sendRequest(request)
 
-	#transmit a request to its destiny	
+	#transmit a request to its destiny
 	def sendRequest(self, request):
 		nextHop = request.nextHop.pop(0)#returns the id of the next hop
 		destiny = elements[nextHop]#retrieve the next hop object searching by its id
