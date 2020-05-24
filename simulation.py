@@ -94,6 +94,46 @@ def validate_graph():
 	for i in networkEdges:
 		print(i)
 
+def get_nodes(rrhs_attributes, net_nodes_attributes, proc_nodes_attributes):
+	#save the id of each element to create the graph
+	vertex = []
+	#RRHs
+	for r in rrhs_attributes:
+		vertex.append("RRH:"+str(r["aId"]))
+	#Network nodes
+	for node in net_nodes_attributes:
+		vertex.append(node["aType"]+":"+str(node["aId"]))
+	#Processing nodes
+	for proc in proc_nodes_attributes:
+		vertex.append(proc["aType"]+":"+str(node["aId"]))
+
+	return vertex
+
+def create_network_elements(input_parameters, rrhs_attributes, 
+	net_nodes_attributes, proc_nodes_attributes):
+
+	for r in rrhs_attributes:
+		rrh = network.RRH(env, r["aId"], input_parameters["distribution"], 
+			input_parameters["cpriFrameGenerationTime"], 
+			input_parameters["transmissionTime"], 
+			input_parameters["localTransmissionTime"], G, 
+			input_parameters["cpriMode"])
+		network.elements[rrh.aId] = rrh
+
+	for node in net_nodes_attributes:
+		net_node = network.NetworkNode(env, node["aId"], node["aType"], 
+			float(node["capacity"]), node["qos"], input_parameters["switchTime"], 
+			input_parameters["transmissionTime"], G)
+		network.elements[net_node.aId] = net_node
+
+	for proc in proc_nodes_attributes:
+		proc_node = network.ProcessingNode(env, proc["aId"], proc["aType"], 
+			float(proc["capacity"]), proc["qos"], 
+			input_parameters["frameProcTime"], 
+			input_parameters["transmissionTime"], G)
+		network.elements[proc_node.aId] = proc_node
+
+
 if __name__ == '__main__':
 
 	try:
@@ -111,53 +151,19 @@ if __name__ == '__main__':
 	proc_nodes_attributes = get_attributes(parameters, "ProcessingNodes")
 	network_edges = get_attributes(parameters, "Edges")
 
+	vertex = get_nodes(rrhs_attributes, net_nodes_attributes, proc_nodes_attributes)
 
-	#save the id of each element to create the graph
-	vertex = []
-	#RRHs
-	for r in rrhs_attributes:
-		vertex.append("RRH:"+str(r["aId"]))
-	#Network nodes
-	for node in net_nodes_attributes:
-		vertex.append(node["aType"]+":"+str(node["aId"]))
-	#Processing nodes
-	for proc in proc_nodes_attributes:
-		vertex.append(proc["aType"]+":"+str(node["aId"]))
-
-	#create the graph
 	G = nx.Graph()
-	#add the nodes to the graph
-	for u in vertex:
-		G.add_node(u)
-	#add the edges and weights to the graph
+
+	for node in vertex:
+		G.add_node(node)
+
 	for edge in network_edges:
-		G.add_edge(edge["source"], edge["destiny"], weight= float(edge["weight"]))
+		G.add_edge(edge["source"], edge["destiny"], weight = float(edge["weight"]))
 
-	#create the elements
-	#create the RRHs
-	for r in rrhs_attributes:
-		rrh = network.RRH(env, r["aId"], input_parameters["distribution"], 
-			input_parameters["cpriFrameGenerationTime"], 
-			input_parameters["transmissionTime"], 
-			input_parameters["localTransmissionTime"], G, 
-			input_parameters["cpriMode"])
-		network.elements[rrh.aId] = rrh
 
-	#create the network nodes
-	for node in net_nodes_attributes:
-		net_node = network.NetworkNode(env, node["aId"], node["aType"], 
-			float(node["capacity"]), node["qos"], input_parameters["switchTime"], 
-			input_parameters["transmissionTime"], G)
-		network.elements[net_node.aId] = net_node
-
-	#create the processing nodes
-	for proc in proc_nodes_attributes:
-		proc_node = network.ProcessingNode(env, proc["aId"], proc["aType"], 
-			float(proc["capacity"]), proc["qos"], 
-			input_parameters["frameProcTime"], 
-			input_parameters["transmissionTime"], G)
-		network.elements[proc_node.aId] = proc_node
-
+	create_network_elements(input_parameters, rrhs_attributes, net_nodes_attributes, 
+		proc_nodes_attributes)
 	#set the limit area of each base station
 	util.createNetworkLimits(input_parameters["limitAxisX"],
 		input_parameters["limitAxisY"],
@@ -165,7 +171,6 @@ if __name__ == '__main__':
 		input_parameters["stepAxisY"],
 		network.elements)
 
-	#print the coordinate of each base station
 	util.printBaseStationCoordinates(rrhs_attributes, network.elements)
 
 
